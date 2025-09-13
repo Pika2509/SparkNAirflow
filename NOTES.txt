@@ -1,0 +1,11 @@
+Points to remember:
+    - Use container(spark-master) name for host while creating connection in airflow to avoid issues due to dynamic IP allocation on next run
+    -spark and airflow-spark should be of SAME VERSION
+
+Modules used:
+    - SparkSubmitOperator: submit Spark applications (written in Python, Scala, Java, etc.) to a Spark cluster directly from an Airflow task.
+
+Errors:
+    - Airflow installation: Initial code did not involve had to add airflow-init
+    - Direct installation(Dockerfile) on packages were not working so added to requirements.txt
+    - Had to use a python 3.11 interpreter venv for compatibility

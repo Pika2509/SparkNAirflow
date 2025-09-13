@@ -1,5 +1,5 @@
 x-spark-common: &spark-common
-  image: bitnami/spark:latest
+  image: bitnami/spark:3.5.1
   volumes:
     - ./jobs:/opt/bitnami/spark/jobs
   networks:
@@ -52,7 +52,14 @@ services:
   airflow-init:
     <<: *airflow-common
     command: >
-      bash -c "pip install -r /opt/airflow/requirements.txt && airflow db migrate && airflow users create --username admin --firstname admin --lastname admin --role Admin --email airflow@airflow.com --password admin"
+      bash -c "airflow db migrate && 
+      airflow users create --username admin --firstname admin --lastname admin --role Admin --email airflow@airflow.com --password admin || true &&
+      python /opt/airflow/scripts/init_connections.py"
+    volumes:
+      - ./scripts:/opt/airflow/scripts
+      - ./jobs:/opt/airflow/jobs
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
     restart: "no"
 
   airflow-webserver:

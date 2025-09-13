@@ -1,15 +1,15 @@
-
 x-spark-common: &spark-common
   image: bitnami/spark:latest
   volumes:
     - ./jobs:/opt/bitnami/spark/jobs
   networks:
-    - pika-m
+    - code-with-yu
 
 x-airflow-common: &airflow-common
   build:
     context: .
     dockerfile: Dockerfile
+  image: custom-airflow:2.7.2-python3.11
   env_file:
     - airflow.env
   volumes:
@@ -19,7 +19,7 @@ x-airflow-common: &airflow-common
   depends_on:
     - postgres
   networks:
-    - pika-m
+    - code-with-yu
 
 services:
   spark-master:
@@ -37,7 +37,7 @@ services:
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 4g
+      SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
 
   postgres:
@@ -47,19 +47,25 @@ services:
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
     networks:
-      - pika-m
+      - code-with-yu
 
-  webserver:
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "pip install -r /opt/airflow/requirements.txt && airflow db migrate && airflow users create --username admin --firstname admin --lastname admin --role Admin --email airflow@airflow.com --password admin"
+    restart: "no"
+
+  airflow-webserver:
     <<: *airflow-common
     command: webserver
     ports:
       - "8080:8080"
-    depends_on:
-      - scheduler
+    restart: always
 
-  scheduler:
+  airflow-scheduler:
     <<: *airflow-common
-    command: bash -c "airflow db migrate && airflow users create --username admin --firstname Pika --lastname M --role Admin --email @gmail.com --password admin && airflow scheduler"
+    command: scheduler
+    restart: always
 
 networks:
-  pika-m:
+  code-with-yu:
